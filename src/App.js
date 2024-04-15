@@ -52,15 +52,39 @@ const average = (arr) =>
 
 export default function App() {
   const [movies, setMovies] = useState(tempMovieData);
+  const [watched, setWatched] = useState(tempWatchedData);
+
   return (
     <>
       {/* Eliminating prop drillng by using  component composition*/}
       <NavBar>
+        <Search />
         <NumResults movies={movies} />
       </NavBar>
+
       <Main>
-        <ListBox movies={movies} />
-        <WatchedBox />
+        {/* METHOD 1: PASSING AS CHILDREN PROPS (Implicit way)*/}
+        {/* PREFERRED WAY */}
+        <Box>
+          <MovieList movies={movies} />
+        </Box>
+
+        <Box>
+          <WatchedSummary watched={watched} />
+          <WatchedList watched={watched} />
+        </Box>
+
+        {/* METHOD 2: PASSING ELEMENTS AS PROPS (More explicitily)*/}
+        {/* This pattern is used in some library, for example, in React router */}
+        {/* <Box element={<MovieList movies={movies} />} />
+        <Box
+          element={
+            <>
+              <WatchedSummary watched={watched} />{" "}
+              <WatchedList watched={watched} />
+            </>
+          }
+        /> */}
       </Main>
     </>
   );
@@ -123,22 +147,46 @@ function Main({ children }) {
   );
 }
 
-function ListBox({ movies }) {
-  const [isOpen1, setIsOpen1] = useState(true);
+function Box({ children }) {
+  const [isOpen, setIsOpen] = useState(true);
   return (
     <>
       <div className="box">
         <button
           className="btn-toggle"
-          onClick={() => setIsOpen1((open) => !open)}
+          onClick={() => setIsOpen((open) => !open)}
         >
-          {isOpen1 ? "–" : "+"}
+          {isOpen ? "–" : "+"}
         </button>{" "}
-        {isOpen1 && <MovieList movies={movies} />}
+        {isOpen && children}
       </div>
     </>
   );
 }
+
+/* function WatchedBox() {
+  const [watched, setWatched] = useState(tempWatchedData);
+  const [isOpen2, setIsOpen2] = useState(true);
+
+  return (
+    <>
+      <div className="box">
+        <button
+          className="btn-toggle"
+          onClick={() => setIsOpen2((open) => !open)}
+        >
+          {isOpen2 ? "–" : "+"}
+        </button>
+        {isOpen2 && (
+          <>
+            <WatchedSummary watched={watched} />
+            <WatchedList watched={watched} />
+          </>
+        )}
+      </div>
+    </>
+  );
+} */
 
 function MovieList({ movies }) {
   return (
@@ -165,30 +213,6 @@ function List({ movie }) {
           </p>
         </div>
       </li>
-    </>
-  );
-}
-
-function WatchedBox() {
-  const [watched, setWatched] = useState(tempWatchedData);
-  const [isOpen2, setIsOpen2] = useState(true);
-
-  return (
-    <>
-      <div className="box">
-        <button
-          className="btn-toggle"
-          onClick={() => setIsOpen2((open) => !open)}
-        >
-          {isOpen2 ? "–" : "+"}
-        </button>
-        {isOpen2 && (
-          <>
-            <WatchedSummary watched={watched} />
-            <WatchedList watched={watched} />
-          </>
-        )}
-      </div>
     </>
   );
 }
