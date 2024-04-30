@@ -50,28 +50,9 @@ const tempWatchedData = [
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
-const KEY = "3b4c6309";
-
 export default function App() {
-  const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
-
-  //NOTE
-  // Below code will fire multiple fetch requests to the API, which ofcourse is a very bad thing. Why?
-  // Because setting the state in render logic will then immediately cause the component to re-render itself
-  // again.
-  // As the component renders, the state will be set. Since the state is set, the component will render again. Again
-  // the state will be set. This cycles continues and be an infinite loop.
-  // This is the reason why setting state in render logic is not allowed.
-
-  // To solve this problem, we use useEffect hook.✅
-
-  // fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
-  //   .then((res) => res.json())
-  //   .then((data) => setMovies(data.Search));
-
-  // Same thing for below code.
-  // setWatched([]);
+  const [movies, setMovies] = useState(tempMovieData);
+  const [watched, setWatched] = useState(tempWatchedData);
 
   return (
     <>
@@ -80,6 +61,7 @@ export default function App() {
         <Search />
         <NumResults movies={movies} />
       </NavBar>
+
       <Main>
         {/* METHOD 1: PASSING AS CHILDREN PROPS (Implicit way)*/}
         {/* PREFERRED WAY */}
