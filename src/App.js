@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const tempMovieData = [
   {
@@ -55,6 +55,54 @@ const KEY = "3b4c6309";
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [error, setError] = useState("");
+
+  const query = "sdfsdf";
+
+  // useEffect doesn't return anything, so we don't store the result into any variable.
+  // But instead we pass in a function. This function is then called our effect, and it will
+  // contain the code that we want to run as a side effects.
+  // So basically, we use useEffect hook to register an effect.
+  // Register means that we want the code not to run as the component renders, but actually after
+  // it has been painted onto the screen.
+
+  // We also pass an empty array as the 2nd argument, this means that this effect will only be executed as the component
+  // first mounts.
+  useEffect(function () {
+    async function fetchMovies() {
+      try {
+        setIsLoading(true);
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+        );
+
+        // As soon as the error is thrown, the code below it won't run
+        if (!res.ok) {
+          throw new Error("Error occured while fetching movies");
+        }
+
+        const data = await res.json();
+        if (data.Response === "False") throw new Error("Movie not found");
+        setMovies(data.Search);
+        console.log(data);
+      } catch (err) {
+        console.error(err.messaage);
+        setError(err.messaage);
+      } finally {
+        setIsLoading(false);
+      }
+
+      // Why we get two ouput in the console even if we do only one console.log() ?
+      // Its because of React.strict mode.
+      // When strict mode is activated in React 18, our effects not only run once but twice. This is just so that React can identify if there are any problems
+      // with our effects.
+      // React will call our effects twice, but only in development not in the production phase.
+      // console.log(data.Search);
+    }
+    fetchMovies();
+  }, []);
 
   //NOTE
   // Below code will fire multiple fetch requests to the API, which ofcourse is a very bad thing. Why?
@@ -84,7 +132,12 @@ export default function App() {
         {/* METHOD 1: PASSING AS CHILDREN PROPS (Implicit way)*/}
         {/* PREFERRED WAY */}
         <Box>
-          <MovieList movies={movies} />
+          {/* {isLoading ? <Loader /> : <MovieList movies={movies} />} */}
+
+          {/* Only one of these three can be true at the same time i.e they are mutually exclusive*/}
+          {isLoading && <Loader />}
+          {!isLoading && !error && <MovieList movies={movies} />}
+          {error && <ErrorMessage messaage={error} />}
         </Box>
 
         <Box>
@@ -105,6 +158,18 @@ export default function App() {
         /> */}
       </Main>
     </>
+  );
+}
+
+function Loader() {
+  return <p className="loader"> Loading...</p>;
+}
+
+function ErrorMessage({ messaage }) {
+  return (
+    <p className="error">
+      <span>{messaage}</span>
+    </p>
   );
 }
 
