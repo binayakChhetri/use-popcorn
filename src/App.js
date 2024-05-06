@@ -89,9 +89,9 @@ export default function App() {
   }
 
   function handleAddWatched(watchedMovie) {
-    for (let i = 0; i < watched.length; i++) {
-      if (watched[i].imdbID === watchedMovie.imdbID) return;
-    }
+    // for (let i = 0; i < watched.length; i++) {
+    //   if (watched[i].imdbID === watchedMovie.imdbID) return;
+    // }
 
     setWatched((currWatched) => [...currWatched, watchedMovie]);
   }
@@ -181,6 +181,7 @@ export default function App() {
               selectedId={selectedId}
               onCloseMovie={handleCloseMovie}
               onAddWatched={handleAddWatched}
+              watched={watched}
             />
           ) : (
             <>
@@ -346,10 +347,14 @@ function List({ movie, onSelectMovie }) {
     </>
   );
 }
-function MovieDetails({ selectedId, onCloseMovie, onAddWatched }) {
+function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState("");
+  const isWatched = watched.map((item) => item.imdbID).includes(selectedId);
+  const watchedUserRating = watched.find(
+    (movie) => movie.imdbID === selectedId
+  )?.userRating;
 
   const {
     Title: title,
@@ -420,21 +425,27 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched }) {
           </header>
           <section>
             <div className="rating">
-              <StarRating
-                maxRating={10}
-                size={24}
-                onSetRating={setUserRating}
-                defaultRating={0}
-              />
-              {userRating > 0 && (
-                <button
-                  className="btn-add"
-                  onClick={() => {
-                    handleAdd(movie);
-                  }}
-                >
-                  + Add
-                </button>
+              {!isWatched ? (
+                <>
+                  <StarRating
+                    maxRating={10}
+                    size={24}
+                    onSetRating={setUserRating}
+                    defaultRating={0}
+                  />
+                  {userRating > 0 && (
+                    <button
+                      className="btn-add"
+                      onClick={() => {
+                        handleAdd(movie);
+                      }}
+                    >
+                      + Add
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p>You rated this movie {watchedUserRating} ⭐</p>
               )}
             </div>
             <p>
@@ -493,7 +504,6 @@ function WatchedList({ watched }) {
 }
 
 function WatchedItem({ movie }) {
-  console.log(movie);
   return (
     <>
       <li key={movie.imdbID}>
