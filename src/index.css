@@ -50,6 +50,8 @@ body {
 }
 
 .box {
+  overflow: auto;
+
   width: 42rem;
   max-width: 42rem;
   background-color: var(--color-background-500);
@@ -152,6 +154,7 @@ body {
   font-size: 1.6rem;
   align-items: center;
 
+  cursor: pointer;
   padding: 1.6rem 3.2rem;
   border-bottom: 1px solid var(--color-background-100);
 }

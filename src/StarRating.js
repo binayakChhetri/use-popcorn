@@ -21,7 +21,7 @@ StarRating.propTypes = {
 };
 
 export default function StarRating({
-  maxRating = 5 /* Setting default value for maxRating if it doesn't exist*/,
+  maxRating = 10 /* Setting default value for maxRating if it doesn't exist*/,
   color = "#fcc419",
   size = 48,
   className = "",
@@ -32,7 +32,7 @@ export default function StarRating({
   const [rating, setRating] = useState(defaultRating);
   function handleRating(rating) {
     setRating(rating);
-    onSetRating(rating);
+    // onSetRating(rating);
   }
 
   const [tempRating, setTempRating] = useState(0);

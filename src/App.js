@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import StarRating from "./StarRating";
 
 // const tempMovieData = [
 //   {
@@ -57,10 +58,8 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [selectedId, setSelectedId] = useState("");
   const [error, setError] = useState("");
-
-  const tempQuery = "Dil";
 
   // useEffect doesn't return anything, so we don't store the result into any variable.
   // But instead we pass in a function. This function is then called our effect, and it will
@@ -81,6 +80,14 @@ export default function App() {
 
   console.log("During Render");
 */
+
+  function handleSelectMovie(movieId) {
+    setSelectedId((selectedId) => (movieId === selectedId ? null : movieId));
+  }
+  function handleCloseMovie() {
+    setSelectedId(null);
+  }
+
   useEffect(
     function () {
       async function fetchMovies() {
@@ -154,15 +161,25 @@ export default function App() {
 
           {/* Only one of these three can be true at the same time i.e they are mutually exclusive*/}
           {isLoading && <Loader />}
-          {!isLoading && !error && <MovieList movies={movies} />}
+          {!isLoading && !error && (
+            <MovieList movies={movies} onSelectMovie={handleSelectMovie} />
+          )}
           {error && <ErrorMessage messaage={error} />}
         </Box>
 
         <Box>
-          <WatchedSummary watched={watched} />
-          <WatchedList watched={watched} />
+          {selectedId ? (
+            <MovieDetails
+              selectedId={selectedId}
+              onCloseMovie={handleCloseMovie}
+            />
+          ) : (
+            <>
+              <WatchedSummary watched={watched} />
+              <WatchedList watched={watched} selectedId={selectedId} />
+            </>
+          )}
         </Box>
-
         {/* METHOD 2: PASSING ELEMENTS AS PROPS (More explicitily)*/}
         {/* This pattern is used in some library, for example, in React router */}
         {/* <Box element={<MovieList movies={movies} />} />
@@ -288,22 +305,26 @@ function Box({ children }) {
   );
 } */
 
-function MovieList({ movies }) {
+function MovieList({ movies, onSelectMovie }) {
   return (
     <>
-      <ul className="list">
+      <ul className="list list-movies">
         {movies?.map((movie) => (
-          <List movie={movie} key={movie.imdbID} />
+          <List
+            movie={movie}
+            key={movie.imdbID}
+            onSelectMovie={onSelectMovie}
+          />
         ))}
       </ul>
     </>
   );
 }
 
-function List({ movie }) {
+function List({ movie, onSelectMovie }) {
   return (
     <>
-      <li key={movie.imdbID}>
+      <li key={movie.imdbID} onClick={() => onSelectMovie(movie.imdbID)}>
         <img src={movie.Poster} alt={`${movie.Title} poster`} />
         <h3>{movie.Title}</h3>
         <div>
@@ -314,6 +335,77 @@ function List({ movie }) {
         </div>
       </li>
     </>
+  );
+}
+function MovieDetails({ selectedId, onCloseMovie }) {
+  const [movie, setMovie] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const {
+    Title: title,
+    Year: year,
+    Poster: poster,
+    Runtime: runtime,
+    imdbRating,
+    Plot: plot,
+    Released: released,
+    Actors: actors,
+    Director: director,
+    Genre: genre,
+  } = movie;
+
+  useEffect(
+    function () {
+      async function getMovieDetails() {
+        setIsLoading(true);
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${KEY}&i=${selectedId}`
+        );
+        const data = await res.json();
+        setMovie(data);
+
+        setIsLoading(false);
+      }
+
+      getMovieDetails();
+    },
+    [selectedId]
+  );
+
+  return (
+    <div className="details">
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <>
+          <header>
+            <button className="btn-back" onClick={onCloseMovie}>
+              &larr;
+            </button>
+            <img alt={`Poster of ${title} movie`} src={poster} />
+            <div className="details-overview">
+              <h2>{title}</h2>
+              <p>
+                {released} &bull; {runtime}
+              </p>
+              <p>{genre}</p>
+              <p>
+                <span>⭐ {imdbRating} IMDb rating</span>
+              </p>
+            </div>
+          </header>
+          <section>
+            <div className="rating">
+              <StarRating maxRating={10} size={24} />
+            </div>
+            <p>
+              <em>{plot}</em>
+            </p>
+            <p>Starring {actors}</p>
+            <p>Directed by {director}</p>
+          </section>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -348,7 +440,7 @@ function WatchedSummary({ watched }) {
   );
 }
 
-function WatchedList({ watched }) {
+function WatchedList({ watched, selectedId }) {
   return (
     <>
       <ul className="list">
