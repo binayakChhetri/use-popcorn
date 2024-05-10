@@ -411,6 +411,23 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     function () {
       if (!title) return;
       document.title = `MOVIE | ${title} `;
+
+      // Cleanup function => function that we return from an effect
+      return function () {
+        document.title = "usePopcorn";
+
+        // This cleanup function actually runs after the component has already
+        // un-mounted/disappeared from the component tree.
+
+        // If that's the case how the function remember the "title" variable ??
+        // It's because of the very important concept in javascript called "closure"
+        // Closure in JS menas, that a function will always remember all the variables
+        // that were present at the time and the pace that the function was created.
+
+        // In
+
+        console.log(`Clean up effect for movie ${title}`);
+      };
     },
     [title]
   );
