@@ -96,6 +96,12 @@ export default function App() {
     setWatched((currWatched) => [...currWatched, watchedMovie]);
   }
 
+  function handleDelWatched(id) {
+    setWatched((currWatched) =>
+      currWatched.filter((item) => item.imdbID !== id)
+    );
+  }
+
   useEffect(
     function () {
       async function fetchMovies() {
@@ -186,7 +192,7 @@ export default function App() {
           ) : (
             <>
               <WatchedSummary watched={watched} />
-              <WatchedList watched={watched} />
+              <WatchedList watched={watched} onDelWatched={handleDelWatched} />
             </>
           )}
         </Box>
@@ -401,6 +407,14 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     [selectedId]
   );
 
+  useEffect(
+    function () {
+      if (!title) return;
+      document.title = `MOVIE | ${title} `;
+    },
+    [title]
+  );
+
   return (
     <div className="details">
       {isLoading ? (
@@ -475,11 +489,11 @@ function WatchedSummary({ watched }) {
           </p>
           <p>
             <span>⭐️</span>
-            <span>{avgImdbRating}</span>
+            <span>{avgImdbRating.toFixed(2)}</span>
           </p>
           <p>
             <span>🌟</span>
-            <span>{avgUserRating}</span>
+            <span>{avgUserRating.toFixed(2)}</span>
           </p>
           <p>
             <span>⏳</span>
@@ -491,19 +505,23 @@ function WatchedSummary({ watched }) {
   );
 }
 
-function WatchedList({ watched }) {
+function WatchedList({ watched, onDelWatched }) {
   return (
     <>
       <ul className="list">
         {watched.map((movie) => (
-          <WatchedItem movie={movie} key={movie.imdbID} />
+          <WatchedItem
+            movie={movie}
+            key={movie.imdbID}
+            onDelWatched={onDelWatched}
+          />
         ))}
       </ul>
     </>
   );
 }
 
-function WatchedItem({ movie }) {
+function WatchedItem({ movie, onDelWatched }) {
   return (
     <>
       <li key={movie.imdbID}>
@@ -522,6 +540,12 @@ function WatchedItem({ movie }) {
             <span>⏳</span>
             <span>{movie.runtime} min</span>
           </p>
+          <button
+            className="btn-delete"
+            onClick={() => onDelWatched(movie.imdbID)}
+          >
+            X
+          </button>
         </div>
       </li>
     </>
