@@ -123,7 +123,10 @@ export default function App() {
           setMovies(data.Search);
           setError("");
         } catch (err) {
-          if (err.name !== "AbortError") setError(err.message);
+          if (err.name !== "AbortError") {
+            setError(err.message);
+            console.log(err.messaage);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -142,6 +145,7 @@ export default function App() {
         return;
       }
 
+      handleCloseMovie();
       fetchMovies();
 
       return function () {
@@ -298,7 +302,7 @@ function Box({ children }) {
           onClick={() => setIsOpen((open) => !open)}
         >
           {isOpen ? "–" : "+"}
-        </button>{" "}
+        </button>
         {isOpen && children}
       </div>
     </>
@@ -397,6 +401,24 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     onCloseMovie();
   }
 
+  // Each time below effect is executed, it will basically add one more event listener to the document.
+  // So we need to cleanup our event listener to prevent such behaviour.
+  useEffect(
+    function () {
+      function callback(e) {
+        if (e.code === "Escape") {
+          onCloseMovie();
+        }
+      }
+      document.addEventListener("keydown", callback);
+
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+    },
+    [onCloseMovie]
+  );
+
   useEffect(
     function () {
       async function getMovieDetails() {
@@ -434,7 +456,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
 
         // In
 
-        console.log(`Clean up effect for movie ${title}`);
+        // console.log(`Clean up effect for movie ${title}`);
       };
     },
     [title]
