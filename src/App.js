@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 
 // const tempMovieData = [
@@ -260,6 +260,36 @@ function Logo() {
 }
 
 function Search({ query, setQuery }) {
+  /* 
+  This is not how we are supposed to select DOM elements in React.
+  Instead we need the concept of refs for this purpose.
+  useEffect(function () {
+    const searchElement = document.querySelector(".search");
+    console.log(searchElement);
+    searchElement.focus();
+  }, []);
+*/
+
+  // Using ref to select DOM elements
+
+  const inputEle = useRef(null);
+
+  useEffect(
+    function () {
+      function callback(e) {
+        if (e.code === "Enter") {
+          if (document.activeElement === inputEle.current) return;
+          inputEle.current.focus();
+          setQuery("");
+        }
+      }
+
+      document.addEventListener("keydown", callback);
+      return () => document.addEventListener("keydown", callback);
+    },
+    [setQuery]
+  );
+
   return (
     <>
       <input
@@ -268,6 +298,7 @@ function Search({ query, setQuery }) {
         placeholder="Search movies..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        ref={inputEle}
       />
     </>
   );
