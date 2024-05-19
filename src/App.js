@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
+import { useMovies } from "./useMovies";
+
+const KEY = "3b4c6309";
 
 // const tempMovieData = [
 //   {
@@ -51,15 +54,12 @@ import StarRating from "./StarRating";
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
-const KEY = "3b4c6309";
-
 export default function App() {
   const [query, setQuery] = useState("");
-  const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedId, setSelectedId] = useState("");
-  const [error, setError] = useState("");
+
+  const { movies, isLoading, error } = useMovies(query);
 
   // useEffect doesn't return anything, so we don't store the result into any variable.
   // But instead we pass in a function. This function is then called our effect, and it will
@@ -101,59 +101,6 @@ export default function App() {
       currWatched.filter((item) => item.imdbID !== id)
     );
   }
-
-  useEffect(
-    function () {
-      const controller = new AbortController();
-
-      async function fetchMovies() {
-        try {
-          setIsLoading(true);
-          setError("");
-          const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
-            { signal: controller.signal }
-          );
-
-          // As soon as the error is thrown, the code below it won't run
-          if (!res.ok) throw new Error("Error occured while fetching movies");
-
-          const data = await res.json();
-          if (data.Response === "False") throw new Error("Movie not found");
-          setMovies(data.Search);
-          setError("");
-        } catch (err) {
-          if (err.name !== "AbortError") {
-            setError(err.message);
-            console.log(err.messaage);
-          }
-        } finally {
-          setIsLoading(false);
-        }
-
-        // Why we get two ouput in the console even if we do only one console.log() ?
-        // Its because of React.strict mode.
-        // When strict mode is activated in React 18, our effects not only run once but twice. This is just so that React can identify if there are any problems
-        // with our effects.
-        // React will call our effects twice, but only in development not in the production phase.
-        // console.log(data.Search);
-      }
-
-      if (query.length < 3) {
-        setMovies([]);
-        setError("");
-        return;
-      }
-
-      handleCloseMovie();
-      fetchMovies();
-
-      return function () {
-        controller.abort(); // It will abort the current fetch request each time there is a new request.
-      };
-    },
-    [query]
-  );
 
   //NOTE
   // Below code will fire multiple fetch requests to the API, which ofcourse is a very bad thing. Why?
@@ -401,6 +348,17 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState("");
   const isWatched = watched.map((item) => item.imdbID).includes(selectedId);
+  const countRef = useRef(0);
+
+  useEffect(
+    function () {
+      if (userRating) {
+        countRef.current++;
+      }
+    },
+    [userRating]
+  );
+
   const watchedUserRating = watched.find(
     (movie) => movie.imdbID === selectedId
   )?.userRating;
@@ -427,6 +385,7 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
       imdbRating: Number(imdbRating),
       runtime: Number(runtime.split(" ")[0]),
       userRating,
+      countRatingDecisions: countRef.current,
     };
     onAddWatched(newWatchedMovie);
     onCloseMovie();
