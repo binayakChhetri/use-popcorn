@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 import { useMovies } from "./useMovies";
+import { useLocalStorageState } from "./useLocalStorageState";
+import { useKey } from "./useKey";
 
 const KEY = "3b4c6309";
 
@@ -56,11 +58,11 @@ const average = (arr) =>
 
 export default function App() {
   const [query, setQuery] = useState("");
-  const [watched, setWatched] = useState([]);
+  // const [watched, setWatched] = useState([]);
   const [selectedId, setSelectedId] = useState("");
 
   const { movies, isLoading, error } = useMovies(query);
-
+  const [watched, setWatched] = useLocalStorageState([], "watched");
   // useEffect doesn't return anything, so we don't store the result into any variable.
   // But instead we pass in a function. This function is then called our effect, and it will
   // contain the code that we want to run as a side effects.
@@ -80,6 +82,18 @@ export default function App() {
 
   console.log("During Render");
 */
+
+  // const [watched, setWatched] = useState(function () {
+  //   // The callback function must be a pure function.
+  //   // This function is only executed once in the initial render and is simply ignored on subsequent re-renders.
+  //   // Whenever the initial value of the state depends on some sort of computation, we should always initialize a function
+  //   // like this. Not call the function inside state.
+  //   const storedValue = localStorage.getItem("watched");
+  //   return JSON.parse(storedValue);
+
+  //   // We should not do this. Becoz react will call this function on every render.
+  //   // useState(localStorage.getItem('watched'))
+  // });
 
   function handleSelectMovie(movieId) {
     setSelectedId((selectedId) => (movieId === selectedId ? null : movieId));
@@ -101,6 +115,13 @@ export default function App() {
       currWatched.filter((item) => item.imdbID !== id)
     );
   }
+
+  // useEffect(
+  //   function () {
+  //     localStorage.setItem("watched", JSON.stringify(watched));
+  //   },
+  //   [watched]
+  // );
 
   //NOTE
   // Below code will fire multiple fetch requests to the API, which ofcourse is a very bad thing. Why?
@@ -221,21 +242,11 @@ function Search({ query, setQuery }) {
 
   const inputEle = useRef(null);
 
-  useEffect(
-    function () {
-      function callback(e) {
-        if (e.code === "Enter") {
-          if (document.activeElement === inputEle.current) return;
-          inputEle.current.focus();
-          setQuery("");
-        }
-      }
-
-      document.addEventListener("keydown", callback);
-      return () => document.addEventListener("keydown", callback);
-    },
-    [setQuery]
-  );
+  useKey(function () {
+    if (document.activeElement === inputEle.current) return;
+    inputEle.current.focus();
+    setQuery("");
+  }, "Enter");
 
   return (
     <>
@@ -393,21 +404,8 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
 
   // Each time below effect is executed, it will basically add one more event listener to the document.
   // So we need to cleanup our event listener to prevent such behaviour.
-  useEffect(
-    function () {
-      function callback(e) {
-        if (e.code === "Escape") {
-          onCloseMovie();
-        }
-      }
-      document.addEventListener("keydown", callback);
 
-      return function () {
-        document.removeEventListener("keydown", callback);
-      };
-    },
-    [onCloseMovie]
-  );
+  useKey(onCloseMovie, "escape");
 
   useEffect(
     function () {
